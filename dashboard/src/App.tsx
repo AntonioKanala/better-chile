@@ -57,9 +57,13 @@ export default function App() {
   const [filterTipo, setFilterTipo] = useState<string>('all');
   const [searchText, setSearchText] = useState('');
   const [sortBy, setSortBy] = useState<'prioridad' | 'fecha' | 'titulo'>('prioridad');
+  const [totalLaws, setTotalLaws] = useState(0);
+  const [evaluatedLaws, setEvaluatedLaws] = useState(0);
+  const [deepAnalyzedLaws, setDeepAnalyzedLaws] = useState(0);
 
   useEffect(() => {
     fetchNormas();
+    fetchProgress();
   }, []);
 
   const fetchNormas = async () => {
@@ -77,6 +81,32 @@ export default function App() {
       console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchProgress = async () => {
+    try {
+      // Total normas
+      const totalRes = await supabase
+        .from('regulaciones')
+        .select('id_norma', { count: 'exact', head: true });
+      setTotalLaws(totalRes.count || 0);
+
+      // Evaluadas
+      const evalRes = await supabase
+        .from('regulaciones')
+        .select('id_norma', { count: 'exact', head: true })
+        .eq('evaluado', true);
+      setEvaluatedLaws(evalRes.count || 0);
+
+      // Deep analyzed
+      const deepRes = await supabase
+        .from('regulaciones')
+        .select('id_norma', { count: 'exact', head: true })
+        .eq('evaluacion_profunda', true);
+      setDeepAnalyzedLaws(deepRes.count || 0);
+    } catch (error) {
+      console.error('Error fetching progress:', error);
     }
   };
 
@@ -190,11 +220,49 @@ export default function App() {
               Auditoria Legislativa Austriaca
             </h1>
             <p className="text-xl text-slate-300 max-w-3xl mx-auto mb-8">
-              Análisis sistemático de <span className="font-bold text-white">{stats.total.toLocaleString()}</span> normas chilenas desde la perspectiva de libertad económica, transparencia y eficiencia.
+              Análisis sistemático de <span className="font-bold text-white">{totalLaws.toLocaleString()}</span> normas chilenas desde la perspectiva de libertad económica, transparencia y eficiencia.
             </p>
             <button onClick={() => setCurrentPage('dashboard')} className="inline-flex items-center px-8 py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg transition-colors">
               Explorar Dashboard <ArrowUpDown className="w-4 h-4 ml-2" />
             </button>
+          </section>
+
+          {/* Progress Bar */}
+          <section className="bg-slate-800/50 border border-slate-700 rounded-xl p-8 mb-16">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-blue-400" />
+                Estado de Evaluación del Proyecto
+              </h3>
+              <span className="text-2xl font-bold text-blue-400">{totalLaws > 0 ? Math.round(evaluatedLaws * 100 / totalLaws) : 0}%</span>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-slate-300 text-sm font-medium">Leyes Analizadas (Pasada Superficial)</span>
+                  <span className="text-slate-400 text-xs">{evaluatedLaws.toLocaleString()} / {totalLaws.toLocaleString()}</span>
+                </div>
+                <div className="w-full bg-slate-700 rounded-full h-3 overflow-hidden">
+                  <div
+                    className="bg-gradient-to-r from-blue-500 to-blue-400 h-full rounded-full transition-all duration-300"
+                    style={{ width: `${totalLaws > 0 ? (evaluatedLaws * 100 / totalLaws) : 0}%` }}
+                  />
+                </div>
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-slate-300 text-sm font-medium">Análisis Profundo (Pasada 2)</span>
+                  <span className="text-slate-400 text-xs">{deepAnalyzedLaws.toLocaleString()} leyes</span>
+                </div>
+                <div className="w-full bg-slate-700 rounded-full h-2 overflow-hidden">
+                  <div
+                    className="bg-gradient-to-r from-amber-500 to-amber-400 h-full rounded-full transition-all duration-300"
+                    style={{ width: `${evaluatedLaws > 0 ? (deepAnalyzedLaws * 100 / evaluatedLaws) : 0}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+            <p className="text-slate-400 text-xs mt-4 text-center">ETA: 5-7 días para completar análisis superficial de todas las normas</p>
           </section>
 
           {/* Stats Cards */}

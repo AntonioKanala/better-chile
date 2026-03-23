@@ -19,9 +19,12 @@ import time
 from collections import defaultdict
 from dotenv import load_dotenv
 from supabase import create_client
-import openai
+from openai import OpenAI
 
 load_dotenv()
+
+# Initialize OpenAI client
+openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Configuration
 MODELO = "gpt-4o"
@@ -176,15 +179,14 @@ def evaluar_profundo(norma):
     )
 
     try:
-        response = openai.ChatCompletion.create(
+        response = openai_client.chat.completions.create(
             model=MODELO,
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT_PROFUNDO},
                 {"role": "user", "content": user_prompt}
             ],
             temperature=0.3,
-            max_tokens=2000,
-            timeout=60
+            max_tokens=2000
         )
 
         analisis_profundo = response.choices[0].message.content
@@ -246,7 +248,7 @@ def run(sector=None, limit=None):
 
         # Guardar
         if guardar_evaluacion_profunda(client, id_norma, analisis):
-            print(f"  ✓ Guardado exitosamente")
+            print(f"  [OK] Guardado exitosamente")
             exitosas += 1
 
         procesadas += 1
