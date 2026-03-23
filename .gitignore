@@ -1,0 +1,45 @@
+# Environment variables - CRITICAL SECURITY
+.env
+.env.local
+.env.*.local
+*.env
+
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build outputs
+dist/
+build/
+.vercel/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+/tmp/
+/logs/
+
+# Database backups
+*.sql
+*.dump
+
+# Temporary files
+.cache/
+.tmp/
+.turbo/
+
+# OS specific
+.env*.local
+.env*.production.local
